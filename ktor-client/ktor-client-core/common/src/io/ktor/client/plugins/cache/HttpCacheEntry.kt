@@ -68,9 +68,13 @@ internal fun HttpResponse.cacheExpires(isShared: Boolean, fallback: () -> GMTDat
 
     val maxAgeKey = if (isShared && cacheControl.any { it.value.startsWith("s-maxage") }) "s-maxage" else "max-age"
 
-    val maxAge = cacheControl.firstOrNull { it.value.startsWith(maxAgeKey) }
-        ?.value?.split("=")
-        ?.get(1)?.toInt()
+    val maxAge = try {
+        cacheControl.firstOrNull { it.value.startsWith(maxAgeKey) }
+            ?.value?.split("=")
+            ?.get(1)?.toIntOrNull() ?: Int.MAX_VALUE
+    } catch (e: NumberFormatException) {
+        Int.MAX_VALUE
+    }
 
     if (maxAge != null) {
         return requestTime + maxAge * 1000L
